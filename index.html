@@ -356,6 +356,7 @@ header {
     flex: 1 0 auto;
     flex: 1 0 auto;
 }
+
 .counter {
   border: red solid 1px;
   border-radius: 50%;
@@ -382,13 +383,16 @@ header {
 	position: absolute;
 	height: 100%;
 	width: 100%;
+	top: 0;
+	left:0;
+	z-index: 998;
 }
         .quadrant {
             position: absolute;
             width: 50%;
             height: 50%;
             cursor: pointer;
-			z-index: 999;
+			z-index: 998;
         }
 #top-left {
 	top: 0;
@@ -415,14 +419,17 @@ header {
 	display: none;
 	cursor: pointer;
 }
+div{
+	 -webkit-tap-highlight-color: rgba(0,0,0,0);
+}
 	</style>
 	</head>
-	 <div class="overlay-invisible">
-		<div id="top-left" class="quadrant" data-color="S"></div>
-		<div id="top-right" class="quadrant" data-color="H"></div>
-		<div id="bottom-left" class="quadrant" data-color="C"></div>
-		<div id="bottom-right" class="quadrant" data-color="D"></div>
-
+	 <!-- <div class="overlay-invisible"> -->
+		<!-- <div id="top-left" class="quadrant" data-color="S"></div> -->
+		<!-- <div id="top-right" class="quadrant" data-color="H"></div> -->
+		<!-- <div id="bottom-left" class="quadrant" data-color="C"></div> -->
+		<!-- <div id="bottom-right" class="quadrant" data-color="D"></div> -->
+	<!-- </div> -->
   <header><div id="SBmmZd"><a class="active">Tous</a><a href="#">Images</a></div><div class="igu8Pb"></div>
   <div class="igu8Pb"></div>
   
@@ -432,67 +439,84 @@ header {
   <path d="M18 17v-6c0-3.07-1.63-5.64-4.5-6.32V4c0-.83-.67-1.5-1.5-1.5s-1.5.67-1.5 1.5v.68C7.64 5.36 6 7.92 6 11v6H4v2h16v-2h-2zm-2 0H8v-6c0-2.48 1.51-4.5 4-4.5s4 2.02 4 4.5v6zm-4 5c1.1 0 2-.9 2-2h-4c0 1.1.9 2 2 2z"></path>
   </svg></span>
   <span id="counter" class="counter">1</span></span></div>
-   <script>
-    const replacements = {
-        1: 'A',
-        11: 'J',
-        12: 'Q',
-        13: 'K'
-    };
+ 
+        <script>
+        document.addEventListener('DOMContentLoaded', () => {
+            const replacements = {
+                1: 'A',
+                11: 'J',
+                12: 'Q',
+                13: 'K'
+            };
 
-    let count = 1;
-    let intervalId;
-	 let cardImageElement = document.getElementById('card-image');
-    let counterElement = document.getElementById('counter');
-	
-    function startCounter() {
-        const counterElement = document.getElementById('counter');
+            let count = 1;
+            let intervalId;
+            let cardImageElement = document.getElementById('card-image');
+            let counterElement = document.getElementById('counter');
 
-        intervalId = setInterval(() => {
-            counterElement.textContent = replacements[count] || count;
-            count++;
-            if (count > 13) {
+            function startCounter() {
+                intervalId = setInterval(() => {
+                    counterElement.textContent = replacements[count] || count;
+                    count++;
+                    if (count > 13) {
+                        count = 1;
+                    }
+                }, 1000);
+            }
+
+            function stopCounter() {
+                clearInterval(intervalId);
+            }
+
+            function showCard(value, color) {
+                cardImageElement.src = `https://taoxadmin.github.io/Cards/${value}${color}.svg`;
+                cardImageElement.style.display = 'block';
+                counterElement.style.display = 'none';
+                document.addEventListener('click', hideCard);
+                // Add event listener to the card image element
+                document.getElementById('card-image').addEventListener('click', hideCard);
+            }
+
+            function hideCard() {
+                cardImageElement.style.display = 'none';
+                counterElement.style.display = 'block';
                 count = 1;
+                startCounter();
+                document.removeEventListener('click', hideCard);
             }
-        }, 1000);
-    }
 
-    function stopCounter() {
-        clearInterval(intervalId);
-    }
+            // Function to create and insert the new overlay div
+            function createOverlay() {
+                const overlayHTML = `
+                    <div class="overlay-invisible">
+                        <div id="top-left" class="quadrant" data-color="S"></div>
+                        <div id="top-right" class="quadrant" data-color="H"></div>
+                        <div id="bottom-left" class="quadrant" data-color="C"></div>
+                        <div id="bottom-right" class="quadrant" data-color="D"></div>
+                    </div>`;
+                document.body.insertAdjacentHTML('afterend', overlayHTML);
 
-    function showCard(value, color) {
-        const cardImageElement = document.getElementById('card-image');
-        cardImageElement.src = `https://taoxadmin.github.io/Cards/${value}${color}.svg`;
-        cardImageElement.style.display = 'block';
-        document.getElementById('counter').style.display = 'none';
-		document.addEventListener('click', hideCard);
-    }
-
-       function hideCard() {
-        cardImageElement.style.display = 'none';
-        counterElement.style.display = 'block';
-        count = 1;
-        startCounter();
-        document.removeEventListener('click', hideCard);
-    }
-
-    window.onload = startCounter;
-
-    document.querySelectorAll('.quadrant').forEach(quadrant => {
-        quadrant.addEventListener('click', (event) => {
-            const counterElement = document.getElementById('counter').textContent;
-            if (counterElement) {
-                const value = replacements[counterElement] || counterElement;
-                const color = event.target.dataset.color;
-                stopCounter();
-                showCard(value, color);
+                // Add event listeners to the new quadrant elements
+                document.querySelectorAll('.quadrant').forEach(quadrant => {
+                    quadrant.addEventListener('click', (event) => {
+                        const counterElementText = document.getElementById('counter').textContent;
+                        if (counterElementText) {
+                            const value = replacements[counterElementText] || counterElementText;
+                            const color = event.target.dataset.color;
+                            stopCounter();
+                            showCard(value, color);
+                        }
+                    });
+                });
             }
+
+            // Attach event listener to the image element
+            document.getElementById('hplogo').addEventListener('click', () => {
+                startCounter();
+                createOverlay();
+            });
         });
-    });
-
-    document.getElementById('card-image').addEventListener('click', hideCard);
-</script>
+    </script>
   
   <div id="vLkmZd"><style data-iml="1702665747246">#gb{}</style><div class="gb_Ja gb_f gb_ab gb_Ka" id="gb"><div class="gb_ud gb_8a gb_jd gb_xd" data-ogsr-up=""><div class="gb_Od"><div class="gb_0c"><div class="gb_l gb_u gb_C" data-ogsr-fb="true" data-ogsr-alt="" id="gbwa"><div class="gb_g"><a class="gb_d" aria-label="Applications Google" href="#" aria-expanded="false" role="button" tabindex="0"><svg class="gb_i" focusable="false" viewBox="0 0 24 24"><path d="M6,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM6,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM12,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM16,6c0,1.1 0.9,2 2,2s2,-0.9 2,-2 -0.9,-2 -2,-2 -2,0.9 -2,2zM12,8c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,14c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2zM18,20c1.1,0 2,-0.9 2,-2s-0.9,-2 -2,-2 -2,0.9 -2,2 0.9,2 2,2z"></path><image src="https://ssl.gstatic.com/gb/images/bar/al-icon.png" alt="" height="24" width="24" style="border:none;display:none \9"></image></svg></a></div></div></div><a class="gb_va gb_fd gb_Hd gb_ge x" aria-label="Connexion" href="https://accounts.google.com/ServiceLogin?hl=fr&amp;passive=true&amp;continue=https://www.google.fr/%3Fpccc%3D1&amp;ec=GAZAAQ" target="_self"><span class="gb_Cd">Connexion</span></a></div><div style="overflow: hidden; position: absolute; top: 0px; visibility: hidden; width: 370px; z-index: 991; height: 0px; margin-top: 50px; transition: height 0.3s ease-in-out 0s; right: 0px; margin-right: 4px;"></div></div></div></div></header>
     <div class="fix" id="outer">
@@ -503,7 +527,7 @@ header {
 	#mlogo
 	{
 	background:url(/images/branding/searchlogo/1x/googlelogo_mobile_tier1_srp_color_75x26dp.png) no-repeat;background-size:75px 26px;color:transparent;height:26px;left:9px;position:absolute;text-align:center;top:5px;width:75px}@media only screen and (-webkit-min-device-pixel-ratio:2),only screen and (min-resolution:192dpi){#mlogo{background-image:url(/images/branding/searchlogo/2x/googlelogo_mobile_tier1_srp_color_75x26dp.png)}}#mlogo.Ib7Efc{background-image:none;line-height:34px;outline:none}#mdlogo{max-height:64px;max-width:100%;vertical-align:middle}#ddlxsharemenu{background-color:#fff;border-radius:2px;box-shadow:0 2px 1px rgba(0,0,0,.1),0 0 1px rgba(0,0,0,.1);color:#1f1f1f;font-size:16px;opacity:0;position:absolute;right:8px;text-align:left;top:8px;transform:translate3d(0px,-200px,0px);-webkit-transform:translate3d(0px,-200px,0px);width:200px;z-index:105}</style>
-	<img style="border:none;max-width:87.5%;margin:8px;transform:scale(0.5); 0" alt="Fêtes de fin d'année 2023" id="hplogo" src="elgoog-logo.png" data-hveid="20" data-atf="0" data-frt="0"><div id="sDeBje">
+	<img style="border:none;max-width:87.5%;margin:8px;transform:scale(0.5); z-index:1000;" alt="Fêtes de fin d'année 2023" id="hplogo" src="elgoog-logo.png" data-hveid="20" data-atf="0" data-frt="0"><div id="sDeBje">
 	</div>  
 	</div>  
 	</div>
@@ -623,6 +647,6 @@ header {
         l.start()
     }();
 </script>
-</div>
+
 
   </body>
