@@ -11,36 +11,27 @@
             width: 100%;
             height: 100%;
             display: flex;
+            flex-direction: column;
             justify-content: center;
             align-items: center;
             overflow: hidden;
+            font-family: Arial, sans-serif;
         }
         .container {
             position: absolute;
             width: 100%;
             height: 100%;
+            display: flex;
+            flex-wrap: wrap;
         }
         .quadrant {
-            position: absolute;
-            width: 50%;
-            height: 50%;
+            flex: 1 1 50%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
             cursor: pointer;
-        }
-        #top-left {
-            top: 0;
-            left: 0;
-        }
-        #top-right {
-            top: 0;
-            right: 0;
-        }
-        #bottom-left {
-            bottom: 0;
-            left: 0;
-        }
-        #bottom-right {
-            bottom: 0;
-            right: 0;
+            border: 1px solid #000;
+            box-sizing: border-box;
         }
         #canvas-container {
             position: fixed;
@@ -51,14 +42,17 @@
             border: 1px solid #000;
             padding: 10px;
             cursor: pointer;
+            z-index: 1000;
         }
         #value-input {
             font-size: 24px;
             color: red;
             margin-bottom: 10px;
+            text-align: center;
         }
         canvas {
             border: 1px solid #000;
+            touch-action: none; /* Prevent scrolling on touch devices */
         }
         #card-image {
             position: fixed;
@@ -71,16 +65,15 @@
     </style>
 </head>
 <body>
-
     <div class="container">
-        <div id="top-left" class="quadrant" data-color="S"></div>
-        <div id="top-right" class="quadrant" data-color="H"></div>
-        <div id="bottom-left" class="quadrant" data-color="C"></div>
-        <div id="bottom-right" class="quadrant" data-color="D"></div>
+        <div id="top-left" class="quadrant" data-color="S">♠️</div>
+        <div id="top-right" class="quadrant" data-color="H">♥️</div>
+        <div id="bottom-left" class="quadrant" data-color="C">♣️</div>
+        <div id="bottom-right" class="quadrant" data-color="D">♦️</div>
     </div>
     <div id="canvas-container">
         <div id="value-input">Dessinez la valeur de la carte</div>
-        <canvas id="draw-canvas" width="600" height="600"></canvas>
+        <canvas id="draw-canvas" width="200" height="200"></canvas>
     </div>
     <img id="card-image" alt="card">
 
@@ -94,24 +87,35 @@
         let selectedColor = '';
         let isDrawing = false;
 
-        canvas.addEventListener('mousedown', startDrawing);
-        canvas.addEventListener('mousemove', draw);
-        canvas.addEventListener('mouseup', stopDrawing);
-        canvas.addEventListener('mouseout', stopDrawing);
+        canvas.addEventListener('touchstart', startDrawing, { passive: false });
+        canvas.addEventListener('touchmove', draw, { passive: false });
+        canvas.addEventListener('touchend', stopDrawing, { passive: false });
+
+        function getTouchPos(canvasDom, touchEvent) {
+            let rect = canvasDom.getBoundingClientRect();
+            return {
+                x: touchEvent.touches[0].clientX - rect.left,
+                y: touchEvent.touches[0].clientY - rect.top
+            };
+        }
 
         function startDrawing(event) {
+            event.preventDefault();
+            let touchPos = getTouchPos(canvas, event);
             isDrawing = true;
             ctx.beginPath();
-            ctx.moveTo(event.offsetX, event.offsetY);
+            ctx.moveTo(touchPos.x, touchPos.y);
         }
 
         function draw(event) {
             if (!isDrawing) return;
-            ctx.lineTo(event.offsetX, event.offsetY);
+            event.preventDefault();
+            let touchPos = getTouchPos(canvas, event);
+            ctx.lineTo(touchPos.x, touchPos.y);
             ctx.stroke();
         }
 
-        function stopDrawing() {
+        function stopDrawing(event) {
             if (!isDrawing) return;
             isDrawing = false;
             recognizeDrawing();
