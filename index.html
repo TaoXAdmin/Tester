@@ -127,6 +127,7 @@
                 dataURL,
                 'eng',
                 {
+                    tessedit_pageseg_mode: Tesseract.PSM.SINGLE_CHAR, // Set PSM_SINGLE_CHAR mode
                     logger: m => console.log(m)
                 }
             ).then(({ data: { text } }) => {
@@ -141,7 +142,7 @@
                     case '7': selectedValue = '7'; break;
                     case '8': selectedValue = '8'; break;
                     case '9': selectedValue = '9'; break;
-                    case '10': selectedValue = '10'; break;
+                    case '10': selectedValue = 'T'; break;
                     case 'J': selectedValue = 'J'; break;
                     case 'Q': selectedValue = 'Q'; break;
                     case 'K': selectedValue = 'K'; break;
