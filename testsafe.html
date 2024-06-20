@@ -1,0 +1,174 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Choisir une carte</title>
+    <style>
+        body, html {
+            margin: 0;
+            padding: 0;
+            width: 100%;
+            height: 100%;
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            overflow: hidden;
+        }
+        .container {
+            position: absolute;
+            width: 100%;
+            height: 100%;
+        }
+        .quadrant {
+            position: absolute;
+            width: 50%;
+            height: 50%;
+            cursor: pointer;
+        }
+        #top-left {
+            top: 0;
+            left: 0;
+        }
+        #top-right {
+            top: 0;
+            right: 0;
+        }
+        #bottom-left {
+            bottom: 0;
+            left: 0;
+        }
+        #bottom-right {
+            bottom: 0;
+            right: 0;
+        }
+        #canvas-container {
+            position: fixed;
+            top: 10px;
+            left: 50%;
+            transform: translateX(-50%);
+            background-color: #fff;
+            border: 1px solid #000;
+            padding: 10px;
+            cursor: pointer;
+        }
+        #value-input {
+            font-size: 24px;
+            color: red;
+            margin-bottom: 10px;
+        }
+        canvas {
+            border: 1px solid #000;
+        }
+        #card-image {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%) scale(0.4);
+            z-index: 1000;
+            display: none;
+        }
+    </style>
+</head>
+<body>
+
+    <div class="container">
+        <div id="top-left" class="quadrant" data-color="S"></div>
+        <div id="top-right" class="quadrant" data-color="H"></div>
+        <div id="bottom-left" class="quadrant" data-color="C"></div>
+        <div id="bottom-right" class="quadrant" data-color="D"></div>
+    </div>
+    <div id="canvas-container">
+        <div id="value-input">Dessinez la valeur de la carte</div>
+        <canvas id="draw-canvas" width="600" height="600"></canvas>
+    </div>
+    <img id="card-image" alt="card">
+
+    <script src="https://cdn.jsdelivr.net/npm/tesseract.js@4.0.2/dist/tesseract.min.js"></script>
+    <script>
+        let canvas = document.getElementById('draw-canvas');
+        let ctx = canvas.getContext('2d');
+        let valueInputElement = document.getElementById('value-input');
+        let cardImageElement = document.getElementById('card-image');
+        let selectedValue = '';
+        let selectedColor = '';
+        let isDrawing = false;
+
+        canvas.addEventListener('mousedown', startDrawing);
+        canvas.addEventListener('mousemove', draw);
+        canvas.addEventListener('mouseup', stopDrawing);
+        canvas.addEventListener('mouseout', stopDrawing);
+
+        function startDrawing(event) {
+            isDrawing = true;
+            ctx.beginPath();
+            ctx.moveTo(event.offsetX, event.offsetY);
+        }
+
+        function draw(event) {
+            if (!isDrawing) return;
+            ctx.lineTo(event.offsetX, event.offsetY);
+            ctx.stroke();
+        }
+
+        function stopDrawing() {
+            if (!isDrawing) return;
+            isDrawing = false;
+            recognizeDrawing();
+        }
+
+        function recognizeDrawing() {
+            let dataURL = canvas.toDataURL('image/png');
+            Tesseract.recognize(
+                dataURL,
+                'eng',
+                {
+                    logger: m => console.log(m)
+                }
+            ).then(({ data: { text } }) => {
+                text = text.trim();
+                switch (text.toUpperCase()) {
+                    case 'A': selectedValue = 'A'; break;
+                    case '2': selectedValue = '2'; break;
+                    case '3': selectedValue = '3'; break;
+                    case '4': selectedValue = '4'; break;
+                    case '5': selectedValue = '5'; break;
+                    case '6': selectedValue = '6'; break;
+                    case '7': selectedValue = '7'; break;
+                    case '8': selectedValue = '8'; break;
+                    case '9': selectedValue = '9'; break;
+                    case '10': selectedValue = '10'; break;
+                    case 'J': selectedValue = 'J'; break;
+                    case 'Q': selectedValue = 'Q'; break;
+                    case 'K': selectedValue = 'K'; break;
+                    default: selectedValue = ''; break;
+                }
+
+                valueInputElement.textContent = `Valeur choisie: ${selectedValue}`;
+                valueInputElement.style.color = 'red';
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+            });
+        }
+
+        function showCard() {
+            if (selectedValue && selectedColor) {
+                let card = selectedValue + selectedColor;
+                cardImageElement.src = `https://taoxadmin.github.io/Cards/${card}.svg`;
+                cardImageElement.style.display = 'block';
+                document.getElementById('canvas-container').style.display = 'none';
+            }
+        }
+
+        document.querySelectorAll('.quadrant').forEach(quadrant => {
+            quadrant.addEventListener('click', (event) => {
+                if (selectedValue) {
+                    selectedColor = event.target.dataset.color;
+                    showCard();
+                } else {
+                    alert('Veuillez d\'abord dessiner une valeur.');
+                }
+            });
+        });
+    </script>
+</body>
+</html>
